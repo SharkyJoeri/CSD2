@@ -10,7 +10,7 @@ kick  = sa.WaveObject.from_wave_file("kick.wav")
 
 
 #   variables & values
-BPM                     = 120 
+BPM                     = 160 
 measures                = 4  
 beats_16th              = 0
 beats_16th_total        = 0 
@@ -56,17 +56,23 @@ if (beats_16th > beats_16th_total):
 
 print(sequence)
 
+def playBack(sound_object):
+    samplePlay = (sound_object).play() 
+    # samplePlay.wait_done()
 
-def playBack():
+
+def playSequence():
     for i in range(beats_16th_total):
         if (sequence[i] == 1):
+            playBack(kick)
             print((i + 1), "Bang")
             time.sleep(beat_16th_duration)
+
             # play sample
         else:
             time.sleep(beat_16th_duration)
 
-playBack()
+playSequence()
 
 # measure_16th = ["| - - - - | - - - - | - - - - | - - - - |"]
 
