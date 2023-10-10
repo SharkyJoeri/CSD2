@@ -1,6 +1,17 @@
 import simpleaudio as sa #sa = SimpleAudio
 import time
 import random
+import utilities
+import argparse
+parser = argparse.ArgumentParser()
+
+#-db DATABSE -u USERNAME -p PASSWORD -size 20
+parser.add_argument("-l", "--loop", action="store_true", help="Enable measure looping?")
+
+args = parser.parse_args()
+
+if args.loop:
+    print("Yes")
 
 
 #   load audio files, defining location of
@@ -21,16 +32,19 @@ beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
 
 #   lists
 sequence = []
+loop_sequence =  0
+if args.loop:
+    loop_sequence = utilities.get_integer_input("How many times should the measures loop?")
 
 #   user input
-print("How many measures should the sequence consist of?")
-measures = int(input())
+measure = utilities.get_integer_input("How many measures should the sequence consist of?")
 beats_16th_total = measures * 16
 print(measures, "measures or", beats_16th_total, "16th notes")
 
-#   sequence
+
+
 while (beats_16th < beats_16th_total):
-    user_input = int(input())
+    user_input = utilities.get_integer_input()
     beats_16th = beats_16th + user_input
     beats_16th_left = beats_16th_total - beats_16th
     print(beats_16th_left, "16th notes left to use")
@@ -55,7 +69,7 @@ if (beats_16th > beats_16th_total):
     del sequence[(beats_16th_total + beats_16th_left)]
 
 print(sequence)
-
+# sequence * loop_sequence
 def playBack(sound_object):
     samplePlay = (sound_object).play() 
     # samplePlay.wait_done()
