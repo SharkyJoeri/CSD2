@@ -10,7 +10,7 @@ beat = []
 print("How long should the sequence be?")
 numPlaybackTimes = int(input())
 
-print("Enter the lengths of the individuel notes one by one, 1 equals the 8th of a note")
+print("Enter the lengths of the individuel notes one by one, 1 equals a quarter note")
 for i in range(numPlaybackTimes):
     beat.append(float(input()))
 
