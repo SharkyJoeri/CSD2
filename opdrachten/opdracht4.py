@@ -45,6 +45,7 @@ def create_events(ts_seq, sample_id):
 def get_ts(event):
     return event['ts']
 
+
 #   convering the timestamps to note durations in seconds
 def convert_sequence_to_timestamps(data): 
     timestamps = [] # temporary list for converted timestamps
@@ -79,6 +80,7 @@ event_seq += create_events(snare['timestamps'], 'snare')
 event_seq += create_events(hihat['timestamps'], 'hihat')
 
 event_seq.sort(key=get_ts) # sort list
+
 
 #   setting up time 
 time_zero = time.time()
