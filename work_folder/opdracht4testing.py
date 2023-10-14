@@ -1,9 +1,10 @@
 import simpleaudio as sa #sa = SimpleAudio
 import time 
+import random
 
 
 #   setup
-BPM                     = 90 
+BPM                     = 95 
 measures                = 4  
 beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
 
@@ -14,7 +15,7 @@ kick = {
     'instrumentname': "kick", 
     'velocity': 100, # midi velocity
     'duration': 300, # duration to play the sample for
-    'sequence': [1, 1, 0, 0,  0, 0, 0, 0,  1, 1, 0, 0,  1, 0, 0, 0],
+    'sequence': [],
     'durations': []
 }
 snare = {
@@ -22,7 +23,7 @@ snare = {
     'instrumentname': "snare", 
     'velocity': 100, # midi velocity
     'duration': 300, # duration to play the sample for
-    'sequence': [0, 0, 0, 1,  0, 0, 1, 0,  0, 0, 1, 1,  1 , 0, 1, 0],
+    'sequence': [],
     'durations': []
 }
 hihat = {
@@ -30,9 +31,44 @@ hihat = {
     'instrumentname': "hihat", 
     'velocity': 100, # midi velocity
     'duration': 300, # duration to play the sample for
-    'sequence': [1, 0, 1, 1,  1, 0, 1, 1,  1, 0, 1, 1,  1, 0, 1, 1],
+    'sequence': [],
     'durations': []
 }
+
+pr_kick = 3 # pr = polyrythm
+pr_snare = 7
+pr_hihat = 2 
+
+groove_delay = 450 / 1000
+
+sequence_len = 24   
+""" 
+[0,0,1,0,0,1, 0,0,1,0,0,1]
+
+0    0  1    0  1
+0   0   1   0   1
+
+"""
+    
+# firstly we make a list with lenght sequence_len that contains only zeros
+def random_seq(data,  sequence_len):
+    seq = [0]*sequence_len
+    
+    
+    for i in range(0, sequence_len, data):
+        seq[i -1 + random.choice([1, -1])] = 1
+
+        # sequence['sequence'] = seq
+    # print(seq)
+    # sequence['sequence'] = seq
+    return seq
+
+
+kick['sequence'] = random_seq(pr_kick, sequence_len)
+
+snare['sequence'] = random_seq(pr_snare,sequence_len)
+    
+hihat['sequence'] = random_seq(pr_hihat,sequence_len)
 
 
 #   function for adding information onto timestamps
@@ -52,11 +88,18 @@ def convert_sequence_to_timestamps(data):
 
     for i in range(len(data['sequence'])): # converting 1/0 > timestamps
         if data['sequence'][i] == 1:
+            # if (i%1 == 0):
+            #     print()
+            #     beat_16th_duration + groove_delay
+            #     print(beat_16th_duration)
+            # else:
+            #     beat_16th_duration - groove_delay
+            #     print(beat_16th_duration)
             timestamps.append(i*beat_16th_duration)
 
     data['timestamps'] = timestamps # writing the list
-    print(data['instrumentname'])
-    print(data['timestamps'])
+    # print(data['instrumentname'])
+    # print(data['timestamps'])
     return data 
 
 
@@ -96,8 +139,10 @@ while num_playback_times:
     if(now > event['ts']):
         sample_id = event['sample_id']
         samples[sample_id].play()
-        if play_seq:
+        # print(play_seq)
+        if   play_seq:
             event = play_seq.pop(0)
+
         else:
             time_zero = time.time()
             time.sleep(beat_16th_duration)
@@ -108,7 +153,66 @@ while num_playback_times:
         time.sleep(0.001)
 
 
+"""-
 
+time signature > 4/4, 5/4, 7/8   x/y
+
+3/4     1 uh me     2 nu me     3 nu me     4 ne me
+4/4     1   uh      2   uh      3   uh      4   uh
+5/4     1   uh      2   uh      3   uh      4   uh    
+
+if 8 note duration / 2
+
+
+x = amount of 16th notes per beat (x * y for total 16th notes)
+y = amount of beats
+
+
+how many measures to input? is amount of 16th notes in time signature times amount of measures
+
+
+
+
+how long sequence? > 16
+
+ask polyrythm all samples
+- 3 kick
+- 5 snare
+- 2 hihat
+
+generate sequence
+
+>> velocity (amplitude samples)
+
+
+beat_16th_
+
+
+
+- - - - - - - - % 
+x . . x . . x . . x . . x . .
+
+
+
+
+
+"""
+
+
+# def random_seq(data):
+#     sequence = []
+#     for i in sequence_len:
+#         sequence.append(1)
+    
+#         add_zero_for = user_input - 1
+
+#         # 16th beats rest
+#         for j in range(add_zero_for):
+#             sequence.append(0)
+
+
+# 4/4 slices 4 > 1 1 0 1 > add zero inbetween > 1 0 1 0 0 0 1 0 > sequencer > x3 for every sample
+# 5/4 slices 5
 
 
 
