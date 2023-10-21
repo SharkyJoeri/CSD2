@@ -3,18 +3,11 @@ import time
 import random
 
 
-#   setup
-BPM                     = 150
-measures                = 4  
-beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
-
-
 #   sound information
 kick = {
     'timestamps': [], 
     'instrumentname': "kick", 
     'velocity': 100, # midi velocity
-    'duration': 300, # duration to play the sample for
     'sequence': [],
     'durations': []
 }
@@ -22,7 +15,6 @@ snare = {
     'timestamps': [], 
     'instrumentname': "snare", 
     'velocity': 100, # midi velocity
-    'duration': 300, # duration to play the sample for
     'sequence': [],
     'durations': []
 }
@@ -30,30 +22,166 @@ hihat = {
     'timestamps': [], 
     'instrumentname': "hihat", 
     'velocity': 100, # midi velocity
-    'duration': 300, # duration to play the sample for
     'sequence': [],
     'durations': []
 }
 
-pr_kick = 7 # pr = polyrythm    #4  sikkema     #3  joeri   #1  gerro   #7
-pr_snare = 11                   #8              #5          #2          #11
-pr_hihat = 3                    #2              #2          #3          #3
+pr_kick = 0
+pr_snare = 0
+pr_hihat = 0
 
-# groove_delay = 450 / 1000
+#   setup
+BPM                     = 120
+measures                = 4  
+beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
+beat_16th_amount        = 0
+sequence_len            = 16  
 
-sequence_len = 16  
-""" 
-[0,0,1,0,0,1, 0,0,1,0,0,1]
 
-0    0  1    0  1
-0   0   1   0   1
+#   setting BPM
+while True:
+    # ask for input
+    inp = input("Enter a new BPM: ")
 
-"""
+    # if no input, default value
+    if not inp:
+        inp = BPM
+        print("Default BPM of", inp, "set")
+        BPM = inp
+        break
+    
+    # else ask for integer, if not an integer repeat till it is
+    else:
+        try:
+            inp = int(inp)
+        except ValueError:
+            print("Please enter a valid integer")
+            continue
+        print("BPM of", inp, "set")
+        break
+
+
+#   asking for time signature
+def get_multiplier_from_time_signature():
+    while True:
+        time_signature = input("Enter a time signature in a (x/y) format: ")
+        
+        if time_signature == "":
+            return 4
+
+        # split the input string using the '/' character
+        parts = time_signature.split('/')
+
+        if len(parts) != 2:
+            print("Invalid time signature format. Please use 'x/y' format.")
+            continue
+        
+        # try to extract the first number and convert it to an integer
+        try:
+            multiplier = int(parts[0])
+        except ValueError:
+            print("Invalid amount of beats per measure. Please provide a valid integer.")
+            continue
+        
+        return multiplier
+
+
+# Call the function to get the multiplier
+multiplier = get_multiplier_from_time_signature()
+beat_16th_amount = multiplier * 4
+
+while True: 
+    measures = input("Enter the amount of measures the sequence should consist of: ")
+
+    if not measures:
+        measures = 1
+        print("Default sequence length of", measures, "measures set")
+        break
+
+    else:
+        try:
+            measures = int(measures)
+        except ValueError:
+            print("Please enter a valid integer")
+            continue
+        print("Sequence length of", measures, "set")
+        break
+
+
+sequence_len = beat_16th_amount * measures
+
+# def polyrhythms():
+#     kick = 3
+#     snare = 5
+#     hihat = 2
+
+#     def get_input(prompt, default_value):
+#         while True:
+#             try:
+#                 user_input = input(prompt)
+#                 if user_input == "":
+#                     return default_value
+#                 value = int(user_input)
+#                 if 0 < value < beat_16th_amount:
+#                     return value
+#                 else:
+#                     print("Input must be an integer between 1 and", beat_16th_duration,".")
+#             except ValueError:
+#                 print("Invalid input. Please enter an integer.")
+
+#     kick = get_input(f"Enter a value for kick (default {kick}): ", kick)
+#     snare = get_input(f"Enter a value for snare (default {snare}): ", snare)
+#     hihat = get_input(f"Enter a value for hihat (default {hihat}): ", hihat)
+
+#     print(f"kick = {kick}, snare = {snare}, hihat = {hihat}")
+
+
+
+# if __name__ == "__main__":
+#     polyrhythms()
+
+
+# #   setting BPM
+# def polyrythms(sample):
+#     while True:
+#         # ask for input
+#         inp = input("Enter a polyrythm value for the", sample, ": ")
+      
+#         # if no input, default value
+#         if not inp:
+#             pr_kick = 3
+#             print("Default polyrythm value of", inp, "set for", sample)
+        
+#         if not snare:
+#             pr_kick = 3
+#             print("Default polyrythm value of", inp, "set")
+
+#         if not kick:
+#             pr_kick = 3
+#             print("Default polyrythm value of", inp, "set")
+#             break
+            
+        
+#         # else ask for integer, if not an integer repeat till it is
+#         else:
+#             try:
+#                 inp = int(inp)
+#             except ValueError:
+#                 print("Please enter a valid integer")
+#                 continue
+#             print("BPM of", inp, "set")
+#             break
+#     return polyrythm
+
+# pr_kick = polyrythms(kick)
+# pr_snare = polyrythms(snare)
+# pr_hihat = polyrythms(hihat)
+
+
     
 # firstly we make a list with lenght sequence_len that contains only zeros
 def random_seq(data,  sequence_len):
     seq = [0]*sequence_len
-    
     
     for i in range(0, sequence_len, data):
         seq[i -1 + random.choice([1, -1])] = 1

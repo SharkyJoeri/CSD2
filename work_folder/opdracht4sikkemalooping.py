@@ -4,7 +4,7 @@ import random
 
 
 #   setup
-BPM                     = 150
+BPM                     = 100
 measures                = 4  
 beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
 
@@ -35,11 +35,11 @@ hihat = {
     'durations': []
 }
 
-pr_kick = 7 # pr = polyrythm    #4  sikkema     #3  joeri   #1  gerro   #7
-pr_snare = 11                   #8              #5          #2          #11
-pr_hihat = 3                    #2              #2          #3          #3
+pr_kick = 3 # pr = polyrythm    #4  sikkema     #3  joeri   #1  gerro   
+pr_snare = 5                    #8              #5          #2
+pr_hihat = 2                    #2              #2          #3
 
-# groove_delay = 450 / 1000
+groove_delay = 450 / 1000
 
 sequence_len = 16  
 """ 
@@ -49,7 +49,6 @@ sequence_len = 16
 0   0   1   0   1
 
 """
-    
 # firstly we make a list with lenght sequence_len that contains only zeros
 def random_seq(data,  sequence_len):
     seq = [0]*sequence_len
@@ -58,6 +57,9 @@ def random_seq(data,  sequence_len):
     for i in range(0, sequence_len, data):
         seq[i -1 + random.choice([1, -1])] = 1
 
+        # sequence['sequence'] = seq
+    # print(seq)
+    # sequence['sequence'] = seq
     return seq
 
 
@@ -128,9 +130,12 @@ play_seq = event_seq.copy()
 event = play_seq.pop(0)
 num_playback_times = 4
 
-
+num_playback_time = 1
 #   playback loop
 while num_playback_times:
+    if num_playback_time == 4:
+        num_playback_time = 1
+
     now = time.time() - time_zero
 
     if(now > event['ts']):
@@ -145,9 +150,9 @@ while num_playback_times:
             time.sleep(beat_16th_duration)
             play_seq = event_seq.copy()
             event = play_seq.pop(0)
-            time_zero = time.time()
     else:
         time.sleep(0.001)
+    num_playback_time += 1
 
 
 """-
