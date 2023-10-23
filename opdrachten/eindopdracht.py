@@ -10,34 +10,30 @@ kick = {
     'instrumentname': "kick", 
     'velocity': 100, # midi velocity
     'sequence': [],
-    'durations': []
+    'durations': [],
+    'midi_note_pitch': 36
 }
 snare = {
     'timestamps': [], 
     'instrumentname': "snare", 
     'velocity': 100, # midi velocity
     'sequence': [],
-    'durations': []
+    'durations': [],
+    'midi_note_pitch': 38
 }
 hihat = {
     'timestamps': [], 
     'instrumentname': "hihat", 
     'velocity': 100, # midi velocity
     'sequence': [],
-    'durations': []
+    'durations': [],
+    'midi_note_pitch': 42
 }
-
-
-#   midi setup
-velocity    = 100
-track       = 0
-channel     = 9  # corresponds to channel 10 drums
 
 
 #   setup
 BPM                     = 120
 measures                = 4  
-beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
 beat_16th_amount        = 0
 sequence_len            = 16  
 
@@ -58,13 +54,16 @@ while True:
     else:
         try:
             inp = int(inp)
+            BPM = inp 
         except ValueError:
             print("Please enter a valid integer")
             continue
         print("BPM of", inp, "set")
         print()
         break
+       
 
+beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
 
 #   asking for time signature
 def get_multiplier_from_time_signature():
@@ -116,7 +115,7 @@ while True:
         except ValueError:
             print("Please enter a valid integer")
             continue
-        print("Sequence length of", sequence_len, "set")
+        print("Sequence length of", beat_16th_amount*measures, "set")
         break
 
 
@@ -130,7 +129,7 @@ def get_polyrhythmic_values():
         polyrhythm = input("Enter the polyrhythm values for the kick, snare and hihat in (k:s:h) format: ")
         
         if polyrhythm == "":
-            print("Default values of 3:2:5 set")
+            print("Default values of 3:5:2 set")
             pr_k = 3
             pr_s = 5
             pr_h = 2
@@ -161,8 +160,7 @@ pr_kick, pr_snare, pr_hihat = get_polyrhythmic_values()
 #   print values
 print(f"Kick: {pr_kick}, Snare: {pr_snare}, Hihat: {pr_hihat}")
 
-
-    
+  
 #   create a list with lenght sequence_len that contains only zeros
 def random_seq(data,  sequence_len):
     seq = [0]*sequence_len
@@ -205,15 +203,40 @@ def convert_sequence_to_timestamps(data):
     # print(data['timestamps'])
     return data 
 
-# def create_midi_file(data):
-#     mf = MIDIFile(1)
 
-#     midi = []
+#   midi setup
+track       = 0
+channel     = 9  # aka channel 10 drums
+moment      = 0
+tempo       = BPM
+duration    = beat_16th_duration # why 8?? no idea but its works after trial and error
+velocity    = 100
 
-#     for i in range(len(data['sequence'])): # converting 1/0 > timestamps
-#         if data['sequence'][i] == 1:
-#             mf.addNote(track, channel, snare_midi_pitch, time, dur, velocity)
+beat = MIDIFile(1)
+beat.addTrackName(track, moment, "Generated Beat")
+beat.addTempo(track, moment, tempo)
 
+
+#   creating midi file
+def create_midi_file():
+    # writing data onto midi file
+    def add_onto_midifile(data):
+        moment = 0
+
+        for hits in data['sequence']:
+            if hits == 1:
+                beat.addNote(track, channel, data['midi_note_pitch'], moment, duration, data['velocity'])
+            moment = moment + 0.25
+
+    # writing data onto
+    add_onto_midifile(kick)
+    add_onto_midifile(snare)
+    add_onto_midifile(hihat)
+
+    # actually create the file
+    print("Midi File Created")
+    with open("beat.mid", "wb") as output_file:
+        beat.writeFile(output_file)
 
 
 #   load audio files, defining location of
@@ -244,208 +267,64 @@ event_seq.sort(key=get_ts)
 time_zero = time.time()
 play_seq = event_seq.copy()
 event = play_seq.pop(0)
-num_playback_times = 4
+
+print("Press CTRL+C to interupt loop")
 
 
 #   playback loop
-while num_playback_times:
-    now = time.time() - time_zero
+while True:
+    try:
+        now = time.time() - time_zero
 
-    if(now > event['ts']):
-        sample_id = event['sample_id']
-        samples[sample_id].play()
-        # print(play_seq)
-        if   play_seq:
-            event = play_seq.pop(0)
+        if(now > event['ts']):
+            sample_id = event['sample_id']
+            samples[sample_id].play()
+            # print(play_seq)
+            if   play_seq:
+                event = play_seq.pop(0)
 
+            else:
+                time_zero = time.time()
+                time.sleep(beat_16th_duration)
+                play_seq = event_seq.copy()
+                event = play_seq.pop(0)
+                time_zero = time.time()
         else:
+            time.sleep(0.001)
+
+    except KeyboardInterrupt:
+        user_input = input("  Do you want to save the MIDI file (y/n)? ").strip().lower()
+        if user_input == 'y':
+            create_midi_file()
+            break  # Exit the program
+        elif user_input == 'n':
+            print("New sequence generated")
+            # Regenerate the random sequence
+            kick['sequence'] = random_seq(pr_kick, sequence_len)
+            snare['sequence'] = random_seq(pr_snare, sequence_len)
+            hihat['sequence'] = random_seq(pr_hihat, sequence_len)
+
+            #   convert binary sequence to timestamps
+            convert_sequence_to_timestamps(kick)
+            convert_sequence_to_timestamps(snare)
+            convert_sequence_to_timestamps(hihat)
+
+
+            #   create one big list of dictionaries for playback
+            event_seq = []
+            event_seq += create_events(kick['timestamps'], 'kick')
+            event_seq += create_events(snare['timestamps'], 'snare')
+            event_seq += create_events(hihat['timestamps'], 'hihat')
+
+
+            #   sort list
+            event_seq.sort(key=get_ts) 
+
+
+            # Reset time_zero
             time_zero = time.time()
-            time.sleep(beat_16th_duration)
             play_seq = event_seq.copy()
             event = play_seq.pop(0)
-            time_zero = time.time()
-    else:
-        time.sleep(0.001)
-
-
-
-
-
-
-
-
-
-
-
-"""-
-
-time signature > 4/4, 5/4, 7/8   x/y
-
-3/4     1 uh me     2 nu me     3 nu me     4 ne me
-4/4     1   uh      2   uh      3   uh      4   uh
-5/4     1   uh      2   uh      3   uh      4   uh    
-
-if 8 note duration / 2
-
-
-x = amount of 16th notes per beat (x * y for total 16th notes)
-y = amount of beats
-
-
-how many measures to input? is amount of 16th notes in time signature times amount of measures
-
-
-
-
-how long sequence? > 16
-
-ask polyrythm all samples
-- 3 kick
-- 5 snare
-- 2 hihat
-
-generate sequence
-
->> velocity (amplitude samples)
-
-
-beat_16th_
-
-
-
-- - - - - - - - % 
-x . . x . . x . . x . . x . .
-
-
-
-
-
-"""
-
-#  def polyrhythms():
-#     kick = 3
-#     snare = 5
-#     hihat = 2
-
-#     def get_input(prompt, default_value):
-#         while True:
-#             try:
-#                 user_input = input(prompt)
-#                 if user_input == "":
-#                     return default_value
-#                 value = int(user_input)
-#                 if 0 < value < beat_16th_amount:
-#                     return value
-#                 else:
-#                     print("Input must be an integer between 1 and", beat_16th_duration,".")
-#             except ValueError:
-#                 print("Invalid input. Please enter an integer.")
-
-#     kick = get_input(f"Enter a value for kick (default {kick}): ", kick)
-#     snare = get_input(f"Enter a value for snare (default {snare}): ", snare)
-#     hihat = get_input(f"Enter a value for hihat (default {hihat}): ", hihat)
-
-#     print(f"kick = {kick}, snare = {snare}, hihat = {hihat}")
-
-
-
-# if __name__ == "__main__":
-#     polyrhythms()
-
-
-# #   setting BPM
-# def polyrythms(sample):
-#     while True:
-#         # ask for input
-#         inp = input("Enter a polyrythm value for the", sample, ": ")
-      
-#         # if no input, default value
-#         if not inp:
-#             pr_kick = 3
-#             print("Default polyrythm value of", inp, "set for", sample)
-        
-#         if not snare:
-#             pr_kick = 3
-#             print("Default polyrythm value of", inp, "set")
-
-#         if not kick:
-#             pr_kick = 3
-#             print("Default polyrythm value of", inp, "set")
-#             break
-            
-        
-#         # else ask for integer, if not an integer repeat till it is
-#         else:
-#             try:
-#                 inp = int(inp)
-#             except ValueError:
-#                 print("Please enter a valid integer")
-#                 continue
-#             print("BPM of", inp, "set")
-#             break
-#     return polyrythm
-
-# pr_kick = polyrythms(kick)
-# pr_snare = polyrythms(snare)
-# pr_hihat = polyrythms(hihat)
-
-
-# def random_seq(data):
-#     sequence = []
-#     for i in sequence_len:
-#         sequence.append(1)
-    
-#         add_zero_for = user_input - 1
-
-#         # 16th beats rest
-#         for j in range(add_zero_for):
-#             sequence.append(0)
-
-
-# 4/4 slices 4 > 1 1 0 1 > add zero inbetween > 1 0 1 0 0 0 1 0 > sequencer > x3 for every sample
-# 5/4 slices 5
-
-
-
-# def convert_timestamps_to_durations(data):
-#     durations = []
-
-#     beat_16th_durations = 60 / BPM / 4
-
-#     for timestamp in range(len(data['sequence'])):
-#         durations.append(timestamp * beat_16th_duration)
-
-#     data['durations'] = durations
-#     print(data['durations'])
-#     return data
-
-
-
-# print(beat_16th_duration)
-
-# # define start position
-# startTime = time.time()
-
-# while True:
-#     currentTime = time.time()
-    
-#     if(currentTime == beat_16th_duration):
-#         print(currentTime)
-
-#         # if timestamps:
-#         #     timestamp = timestamps.pop(0)
-#         # else:
-#         #     break
-    
-#     else:
-#         time.sleep(0.001)
-
-# time.sleep(1) # end buffer for last note 
-
-            # if (i%1 == 0):
-            #     print()
-            #     beat_16th_duration + groove_delay
-            #     print(beat_16th_duration)
-            # else:
-            #     beat_16th_duration - groove_delay
-            #     print(beat_16th_duration)
+        else:
+            print("Invalid input. Code shutting down")
+            break
