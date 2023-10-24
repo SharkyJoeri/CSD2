@@ -1,0 +1,1 @@
+This is assignment 1 from the CSD2a course containing python basics and git 
