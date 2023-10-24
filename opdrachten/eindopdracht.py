@@ -59,9 +59,8 @@ while True:
             print("Please enter a valid integer")
             continue
         print("BPM of", inp, "set")
-        print()
         break
-       
+
 
 beat_16th_duration      = 60 / BPM / 4      # 1/16th measure
 
@@ -199,8 +198,6 @@ def convert_sequence_to_timestamps(data):
             timestamps.append(i*beat_16th_duration)
 
     data['timestamps'] = timestamps # writing the list
-    # print(data['instrumentname'])
-    # print(data['timestamps'])
     return data 
 
 
@@ -209,7 +206,7 @@ track       = 0
 channel     = 9  # aka channel 10 drums
 moment      = 0
 tempo       = BPM
-duration    = beat_16th_duration # why 8?? no idea but its works after trial and error
+duration    = beat_16th_duration 
 velocity    = 100
 
 beat = MIDIFile(1)
@@ -296,10 +293,10 @@ while True:
         user_input = input("  Do you want to save the MIDI file (y/n)? ").strip().lower()
         if user_input == 'y':
             create_midi_file()
-            break  # Exit the program
+            break  # exit the program
         elif user_input == 'n':
             print("New sequence generated")
-            # Regenerate the random sequence
+            #   regenerate the random sequence
             kick['sequence'] = random_seq(pr_kick, sequence_len)
             snare['sequence'] = random_seq(pr_snare, sequence_len)
             hihat['sequence'] = random_seq(pr_hihat, sequence_len)
@@ -321,7 +318,7 @@ while True:
             event_seq.sort(key=get_ts) 
 
 
-            # Reset time_zero
+            #   reset time again
             time_zero = time.time()
             play_seq = event_seq.copy()
             event = play_seq.pop(0)
